@@ -15,12 +15,9 @@ library(readxl)
 Download the trashwheel dataset 
 ```{r}
 trashwheel_df = 
-  readxl::read_excel("./data/TrashWheelCollection.xlsx",
+  readxl::read_excel(".TrashWheelCollection.xlsx",
   sheet = "MrTrashWheel", range = "A2:N535") %>% 
-  mutate(
-  sports_balls = round(sports_balls),
-  sports_balls = as.integer(sports_balls)
-)
+  janitor::clean_names()
   
           
 ```
