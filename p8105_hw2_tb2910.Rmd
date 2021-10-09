@@ -15,9 +15,45 @@ library(readxl)
 Download the trashwheel dataset 
 ```{r}
 trashwheel_df = 
-  readxl::read_excel(".TrashWheelCollection.xlsx",
+  readxl::read_excel("TrashWheelCollection.xlsx",
   sheet = "MrTrashWheel", range = "A2:N535") %>% 
-  janitor::clean_names()
-  
-          
+  janitor::clean_names() %>% 
+  mutate(sports_balls = round(sports_balls),
+  sports_balls = as.integer(sports_balls))%>% 
+  drop_na(dumpster)
+```
+
+#2018 and 2019 precipitation data 
+```{r}
+precip_18 = 
+  readxl::read_excel("TrashWheelCollection.xlsx",
+  sheet = "2018 Precipitation", skip = 1) %>% 
+  janitor::clean_names() %>%
+  drop_na(month) %>% 
+  mutate(year = 2018) %>% 
+  relocate(year)
+
+
+precip_19 = 
+  readxl::read_excel("TrashWheelCollection.xlsx",
+  sheet = "2019 Precipitation", skip = 1) %>% 
+  janitor::clean_names() %>%
+  drop_na(month) %>% 
+  mutate(year = 2019) %>% 
+  relocate(year)
+```
+
+#Combining annual precipitation 
+x
+```{r}
+month_df = 
+  tibble(
+    month = 1:12,
+    month_name = month.name
+  )
+
+Precipitation_df = 
+  bind_rows(precip_19, precip_18)
+
+left_join(Precipitation_df, month_df, by = "month")
 ```
