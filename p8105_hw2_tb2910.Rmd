@@ -9,4 +9,19 @@ I'm an R Markdown document!
 
 ```{r setup}
 library(tidyverse)
+library(readxl)
+```
+
+Download the trashwheel dataset 
+```{r}
+trashwheel_df = 
+  read_excel("./data/Trash-Wheel-Collection.xlsx")
+  sheet = "Mr. Trash Wheel"
+  range = cell_cols("A:N")
+  janitor::clean_names() %>%
+  drop_na(dumpster) %>%
+mutate(
+  sports_balls = round(sports_balls),
+  sports_balls = as.integer(sports_balls)
+)%>%
 ```
