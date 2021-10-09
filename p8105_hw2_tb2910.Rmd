@@ -1,0 +1,12 @@
+---
+title: "Homework 2"
+author: "Teshawna Badu"
+date: 10/09/2021
+output: github_document
+---
+
+I'm an R Markdown document!
+
+```{r setup}
+library(tidyverse)
+```
