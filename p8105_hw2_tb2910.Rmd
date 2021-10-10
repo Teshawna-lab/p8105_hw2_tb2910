@@ -10,6 +10,7 @@ I'm an R Markdown document!
 ```{r setup}
 library(tidyverse)
 library(readxl)
+library(readr)
 ```
 
 Download the trashwheel dataset 
@@ -19,11 +20,11 @@ trashwheel_df =
   sheet = "MrTrashWheel", range = "A2:N535") %>% 
   janitor::clean_names() %>% 
   mutate(sports_balls = round(sports_balls),
-  sports_balls = as.integer(sports_balls))%>% 
+  sports_balls = as.integer(sports_balls)) %>% 
   drop_na(dumpster)
 ```
 
-#2018 and 2019 precipitation data 
+# Problem 1: 2018 and 2019 precipitation data 
 ```{r}
 precip_18 = 
   readxl::read_excel("TrashWheelCollection.xlsx",
@@ -43,7 +44,7 @@ precip_19 =
   relocate(year)
 ```
 
-#Combining annual precipitation 
+# Combining annual precipitation 
 x
 ```{r}
 month_df = 
@@ -56,4 +57,75 @@ Precipitation_df =
   bind_rows(precip_19, precip_18)
 
 left_join(Precipitation_df, month_df, by = "month")
+
+summary(Precipitation_df)
 ```
+
+The Mr. Trash Wheel is a water wheel trash collector located in Inner Harbor in Baltimore, Maryland.  The data in this dataset includes `r colnames(Precipitation_df)`. The size of dataset we have is `r nrow(Precipitation_df) * ncol(Precipitation_df)`.The total precipitation in 2018 is
+`r sum(Precipitation_df[Precipitation_df["year"] == 2018, "total"])`. The median number of sports balls in a dumpster in 2019 is `r trashwheel_df %>% filter(year == 2019) %>% pull(sports_balls) %>% median()`.
+
+
+#  Problem 2
+# clean pols-month
+```{r}
+pols_df = read_csv("./FiveThirtyEight/pols-month.csv") %>% 
+ janitor::clean_names() %>% 
+  separate(mon, into = c("year", "month", "day"), convert = T) %>% 
+  mutate(month = month.name[month],
+         president = recode(prez_gop, `0` = "dem", `1` = "gop", `2` = "gop")) %>%
+  select(-day, -starts_with("prez"))
+```
+
+# clean snp
+```{r}
+snp_path = "./FiveThirtyEight/snp.csv"
+
+my_parse_date = function(date){
+  date = parse_date(date, format = '%m/%d/%y')
+  date[format(date, "%y") >= 50] = parse_date(format(date[format(date, "%y") >= 50], "19%y-%m-%d"))
+  return(date)
+}
+snp_df =
+read_csv(snp_path) %>% 
+janitor::clean_names() %>% 
+mutate(date = my_parse_date(date)) %>% 
+separate(date, into = c("year", "month", "day"), convert = TRUE) %>% 
+arrange(year, month) %>% 
+mutate(month = month.name[month]) %>% 
+relocate(year, month) %>% 
+select(-day)
+```
+
+
+# clean unemployment
+```{r}
+unemploy_path = "./FiveThirtyEight/unemployment.csv"
+month_dict = month.name
+names(month_dict) = month.abb
+
+unemploy_df = 
+  read_csv(unemploy_path) %>%
+  pivot_longer(cols = "Jan":"Dec", names_to = "month", values_to = "unemployment_rate") %>% 
+  mutate(month = as.character(month_dict[month])) %>% 
+  janitor::clean_names()
+```
+
+
+# Merge 
+
+```{r}
+Fivethirty_df = 
+  left_join(pols_df, snp_df) %>% 
+  left_join(unemploy_df)
+```
+The pols-month is a dataset related to the number of national politicians who are democratic or republican at any given time. The `pols_df` dataset contains `r ncol(pols_df)` variables and `r nrow(pols_df)` observations. The key variables include`r colnames(pols_df)[3:9]`, from 
+`r min(pull(pols_df, year))` to `r max(pull(pols_df, year))`.
+
+
+Snp is a dataset related to Standard & Poor’s stock market index (S&P). It contains `r ncol(snp_df)` variables and `r nrow(snp_df)` observations.The key variables include `r colnames(snp_df)[3]`, from `r min(pull(snp_df, year))` to `r max(pull(snp_df, year))`.
+
+
+The unemployment dataset consists of information related to unemployment percentage with respect to years and months. It contains `r ncol(unemploy_df)` variables and `r nrow(unemploy_df)` 
+observations.The key variables include `r ncol(unemploy_df)` variables and `r nrow(unemploy_df)` 
+observations. It provides relevant information of unemployment rate per month in US by the variable`r colnames(unemploy_df)[3]` from `r min(pull(unemploy_df, year))` to `r max(pull(unemploy_df, year))`.
+
